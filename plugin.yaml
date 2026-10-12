@@ -1,0 +1,83 @@
+id: linkcard
+name: Hyperlink Card
+version: 0.1.0
+apiVersion: kite/plugin/v1
+requires: ">=0.1.0 <2.0.0"
+description: >-
+  Turns card code blocks into link cards in three sizes, like Halo's
+  hyperlink card. Icons come from a favicon service, and missing titles
+  and descriptions can be fetched in the reader's browser.
+author:
+  name: bailangvvkg
+  url: https://blog.zipimg.cn
+license: MIT
+homepage: https://github.com/bailangvvkg/plugin-linkcard
+
+# The plugin's scripts load favicons and link metadata from these sites.
+hosts: [api.microlink.io, icons.duckduckgo.com, www.google.com]
+
+# plugin.wasm draws the cards when a page is built; card.js fills in what
+# the cards are missing, fetching only what the settings allow.
+hooks: [transform_html]
+
+inject:
+  - at: head
+    html: |
+      <link rel="stylesheet" href="{{ asset "card.css" }}">
+  - at: body
+    html: |
+      <script>window.KiteLinkCard = {settings: {{ .Settings }}};</script>
+      <script src="{{ asset "card.js" }}" defer></script>
+
+settings:
+  - key: default_size
+    type: select
+    label: Default size
+    help: The size of a card whose block does not give one.
+    default: regular
+    options:
+      - {value: small, label: Small}
+      - {value: regular, label: Regular}
+      - {value: grid, label: Grid}
+  - key: target
+    type: select
+    label: Open links in
+    default: _blank
+    options:
+      - {value: _blank, label: A new tab}
+      - {value: _self, label: The same tab}
+  - key: fetch
+    type: boolean
+    label: Fetch missing metadata
+    help: In the reader's browser, ask a link detail service for titles and descriptions a card does not give.
+    default: true
+  - key: api
+    type: select
+    label: Fetch from
+    help: Where missing titles and descriptions come from. Microlink is a free public API with a daily limit.
+    default: microlink
+    showIf: {fetch: true}
+    options:
+      - {value: microlink, label: Microlink}
+      - {value: custom, label: Custom endpoint}
+  - key: api_url
+    type: text
+    label: Custom endpoint
+    help: Read when Fetch from is Custom endpoint. Put {url} where the address goes, as https://api.example.com/link?url={url}; the reply is JSON with title, description, image and logo.
+    placeholder: https://api.example.com/link?url={url}
+    showIf: {fetch: true, api: custom}
+  - key: cache
+    type: boolean
+    label: Cache what is fetched
+    help: Keep fetched metadata in the reader's browser, so a card is fetched once.
+    default: true
+    showIf: {fetch: true}
+  - key: icons
+    type: select
+    label: Favicon service
+    help: Where the icon of a card that gives none comes from.
+    default: duckduckgo
+    options:
+      - {value: duckduckgo, label: DuckDuckGo}
+      - {value: google, label: Google}
+      - {value: none, label: None}

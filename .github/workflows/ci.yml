@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version: "1.26"
+
+      # Straight from GitHub: the module proxy can take a while to see a
+      # new commit on Kite's main branch.
+      - name: Install Kite
+        env:
+          GOPRIVATE: github.com/kite-plus
+        run: |
+          go install github.com/kite-plus/kite/cmd/kite@main
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      - name: Check and test the module's logic
+        run: |
+          go vet ./...
+          go test ./...
+
+      - name: Build the module
+        run: make build
+
+      # Checked the way a site checks a plugin it loads.
+      - name: Verify the plugin
+        run: kite plugin verify .
+
+      - name: Check the script
+        run: node --check assets/card.js
+
+      - name: Build a site with it
+        run: |
+          site="$RUNNER_TEMP/site"
+          kite init "$site" --yes --workflow=false
+          mkdir -p "$site/content/posts/cards"
+          cat > "$site/content/posts/cards/index.md" <<'MD'
+          ---
+          id: 01J8KQ2P3R4S5T6V7W8X9YZ002
+          title: Cards
+          status: published
+          published_at: 2026-01-01T00:00:00Z
+          ---
+
+          A card of every size, and one moved from Halo.
+
+          ```card
+          url: https://example.com/full
+          title: A full card
+          desc: Everything written by hand.
+          image: https://example.com/share.jpg
+          icon: https://example.com/favicon.ico
+          size: grid
+          ```
+
+          ```card
+          https://example.com/bare
+          ```
+
+          ```card
+          url: https://example.com/small
+          size: small
+          ```
+
+          A plain block stays a block:
+
+          ```shell
+          echo hi
+          ```
+
+          <hyperlink-card target="_blank" href="https://example.com/halo" theme="regular"><a href="https://example.com/halo">https://example.com/halo</a></hyperlink-card>
+
+          A card whose address is no address stays as it is:
+
+          ```card
+          url: not a url
+          ```
+          MD
+          # The Halo tag is raw HTML in the body; it reaches the page only
+          # with raw HTML let through.
+          printf 'markdown:\n  unsafeHTML: true\n' >> "$site/kite.yaml"
+          cd "$site"
+          kite plugin add "$GITHUB_WORKSPACE"
+          kite plugin enable linkcard
+          kite build
+
+          page="public/posts/cards/index.html"
+          grep -q 'class="kite-card" data-size="grid" href="https://example.com/full"' "$page"
+          grep -q 'data-need="icon title desc image"' "$page"
+          grep -q 'data-size="small"' "$page"
+          grep -q 'class="kite-card" data-size="regular" href="https://example.com/halo"' "$page"
+          if grep -q 'hyperlink-card' "$page"; then
+            echo "A tag moved from Halo was left in the page."
+            exit 1
+          fi
+          grep -q 'data-lang="shell"' "$page"
+          if ! grep -q 'not a url' "$page"; then
+            echo "A block that is no card should have stayed a block."
+            exit 1
+          fi
+          grep -q 'KiteLinkCard' "$page"

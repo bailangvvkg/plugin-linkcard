@@ -1,0 +1,40 @@
+plugin:
+  title: 超链接卡片
+  description: 把 card 代码块渲染成链接卡片，有三种尺寸。图标可由 favicon 服务补全，缺失的标题和描述可在浏览器端抓取。
+  settings:
+    default_size:
+      label: 默认尺寸
+      help: 代码块里没有写 size 时使用的卡片大小。
+    target:
+      label: 链接打开方式
+      help: 点击卡片时在新标签页还是当前页打开。
+    fetch:
+      label: 抓取缺失的元数据
+      help: 在读者的浏览器里向链接详情服务询问卡片没有写的标题和描述。
+    api:
+      label: 抓取来源
+      help: 缺失的标题和描述从哪里来。Microlink 是免费的公共 API，有每日限额。
+    api_url:
+      label: 自定义接口
+      help: 抓取来源选“自定义接口”时读取。地址里用 {url} 表示链接地址，如 https://api.example.com/link?url={url}；接口返回 JSON，含 title、description、image、logo。
+      placeholder: https://api.example.com/link?url={url}
+    cache:
+      label: 缓存抓取结果
+      help: 把抓取到的元数据存在读者的浏览器里，一张卡片只抓取一次。
+    icons:
+      label: 图标服务
+      help: 卡片没有写 icon 时，网站图标从哪里来。
+    default_size.options:
+      small: 小
+      regular: 常规
+      grid: 大图
+    target.options:
+      _blank: 新标签页
+      _self: 当前页
+    api.options:
+      microlink: Microlink
+      custom: 自定义接口
+    icons.options:
+      duckduckgo: DuckDuckGo
+      google: Google
+      none: 不使用
