@@ -2,7 +2,8 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,21 +19,22 @@ jobs:
         with:
           go-version: "1.26"
 
-      # A zip whose plugin.yaml says another version would install as that
-      # version.
-      - name: Check the tag against plugin.yaml
+      # The version is the clock, so no one has to lift a version number.
+      # The module is built here too, so no one installing the zip needs Go.
+      - name: Version the plugin by the clock
         run: |
-          version=$(sed -n 's/^version: //p' plugin.yaml)
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
-            echo "The tag is $GITHUB_REF_NAME, but plugin.yaml says $version."
-            exit 1
-          fi
+          version="$(TZ=Asia/Shanghai date +%Y%m%d-%H%M%S)"
+          echo "version=$version" >> "$GITHUB_ENV"
+          sed -i "s/^version: .*/version: $version/" plugin.yaml
 
-      # The module is built here, so no one installing the zip needs Go.
       - name: Pack the plugin
         run: make zip
 
+      # Makes the tag itself, named after the clock, with the zip on it.
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/*.zip --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
+        run: |
+          gh release create "v$version" dist/*.zip \
+            --title "v$version" \
+            --notes "Built from $GITHUB_SHA automatically."

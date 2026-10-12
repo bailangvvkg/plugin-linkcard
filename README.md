@@ -14,11 +14,11 @@ WebAssembly 模块画成 HTML，读者浏览器里再补上缺的图标和文字
 
 ## 安装
 
-从 GitHub Releases 下载 zip（里面有编译好的 `plugin.wasm`，不需要 Go），在站点目录：
+从 [Releases](https://github.com/bailangvvkg/plugin-linkcard/releases) 下载最新 zip（版本号是打包的年月日时分秒；里面有编译好的 `plugin.wasm`，不需要 Go），在站点目录：
 
 ```bash
-kite plugin add linkcard-0.1.0.zip   # 装进 plugins/linkcard，默认关着
-kite plugin enable linkcard          # 打开，写入 kite.yaml
+kite plugin add <下载的zip路径>    # 装进 plugins/linkcard，默认关着
+kite plugin enable linkcard       # 打开，写入 kite.yaml
 ```
 
 或者从本仓库的源码安装（需要 Go 1.24+）：
