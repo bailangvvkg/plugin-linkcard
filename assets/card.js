@@ -93,7 +93,8 @@
     span.className = "kc-icon kc-icon-letter";
     span.textContent = (host || "?").charAt(0).toUpperCase();
     body.insertBefore(span, body.firstChild);
-    done(card, "icon");
+    // Not done: a service's reply can still bring the real icon, which
+    // takes the letter's place when it loads.
   }
 
   function putTitle(card, title) {
