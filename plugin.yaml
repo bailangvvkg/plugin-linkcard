@@ -80,9 +80,10 @@ settings:
   - key: icons
     type: select
     label: Favicon service
-    help: Where the icon of a card that gives none comes from.
+    help: Where the icon of a card that gives none comes from. Direct asks the linked site itself for its favicon, through no third party, and a site with its favicon nowhere usual shows none.
     default: duckduckgo
     options:
       - {value: duckduckgo, label: DuckDuckGo}
       - {value: google, label: Google}
+      - {value: direct, label: Direct from the site}
       - {value: none, label: None}

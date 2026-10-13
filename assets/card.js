@@ -30,26 +30,42 @@
     }
   }
 
-  function iconUrl(card) {
+  function iconUrls(card) {
     var host = hostOf(card);
-    if (!host) return "";
+    if (!host) return [];
+    var origin = "https://" + host;
+    try {
+      origin = new URL(card.href).origin;
+    } catch (e) {
+      return [];
+    }
     switch (S.icons) {
       case "none":
-        return "";
+        return [];
       case "google":
-        return "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64";
+        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64"];
+      // Straight from the site the card points at, through no one else:
+      // the usual places a favicon sits are tried one after another.
+      case "direct":
+        return [origin + "/favicon.ico", origin + "/apple-touch-icon.png", origin + "/favicon.png"];
       default:
-        return "https://icons.duckduckgo.com/ip3/" + host + ".ico";
+        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico"];
     }
   }
 
-  function putIcon(card, src) {
+  function putIcon(card, src, more) {
     var body = card.querySelector(".kc-body");
     if (!body || body.querySelector(".kc-icon")) return;
     var img = document.createElement("img");
     img.className = "kc-icon";
     img.alt = "";
     img.loading = "lazy";
+    if (more && more.length) {
+      img.onerror = function () {
+        img.remove();
+        putIcon(card, more[0], more.slice(1));
+      };
+    }
     img.src = src;
     body.insertBefore(img, body.firstChild);
     done(card, "icon");
@@ -149,8 +165,8 @@
   // Icons need no service call: point the picture at a favicon and be done.
   cards.forEach(function (card) {
     if (!needs(card, "icon")) return;
-    var src = iconUrl(card);
-    if (src) putIcon(card, src);
+    var urls = iconUrls(card);
+    if (urls.length) putIcon(card, urls[0], urls.slice(1));
   });
 
   // What is left needs asking a service, one card at a time, so the daily
