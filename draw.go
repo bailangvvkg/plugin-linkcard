@@ -21,6 +21,47 @@ var cards = regexp.MustCompile(`(?s)<pre><code class="language-(?:card|linkcard|
 // link that stands in for the card, is dropped.
 var hyperlinks = regexp.MustCompile(`(?is)<hyperlink-(?:inline-)?card\b[^>]*>.*?</hyperlink-(?:inline-)?card>`)
 
+// articles matches one article region, where a page's writing is, so a
+// link in a menu or a footer stays a link. The article tag is what themes
+// wrap a single piece of writing in.
+var articles = regexp.MustCompile(`(?is)<article\b.*?</article>`)
+
+// anchors matches a link and what it says, so one whose text is just its
+// own address can stand for a card.
+var anchors = regexp.MustCompile(`(?i)<a href="(https?://[^"]*)"[^>]*>([^<]*)</a>`)
+
+// bareCards turns the links of a page's writing into cards, when the
+// setting asks for it: a link that says its own address, as an autolink
+// does, is a card's one-line form.
+func bareCards(pageHTML, size, target string) string {
+	return articles.ReplaceAllStringFunc(pageHTML, func(region string) string {
+		return anchors.ReplaceAllStringFunc(region, func(link string) string {
+			m := anchors.FindStringSubmatch(link)
+			if !saysAddress(m[2], m[1]) {
+				return link
+			}
+			if card, ok := drawCard(map[string]string{"url": m[1]}, size, target); ok {
+				return card
+			}
+			return link
+		})
+	})
+}
+
+// saysAddress tells whether a link's text is the address itself, with or
+// without the scheme, the www, or the last slash.
+func saysAddress(text, href string) bool {
+	t := strings.TrimSpace(html.UnescapeString(text))
+	if t == "" || len(t) > len(href)+7 {
+		return false
+	}
+	h := html.UnescapeString(href)
+	plain := strings.TrimPrefix(strings.TrimPrefix(h, "https://"), "http://")
+	plain = strings.TrimPrefix(plain, "www.")
+	t, h, plain = strings.TrimSuffix(t, "/"), strings.TrimSuffix(h, "/"), strings.TrimSuffix(plain, "/")
+	return t == h || t == plain
+}
+
 // attrs reads the attributes a hyperlink card tag gives that matter here:
 // its address, its size, and the parts its author wrote by hand.
 var attrs = regexp.MustCompile(`(?is)(href|target|theme|custom-title|custom-description|custom-image|custom-icon)\s*=\s*"([^"]*)"`)
@@ -30,10 +71,10 @@ var attrNames = map[string]string{"href": "url", "target": "target", "theme": "s
 // tags strips the markup chroma adds, and params takes the keys and values
 // from what a card's block says.
 var (
-	tags   = regexp.MustCompile(`<[^>]*>`)
-	param  = regexp.MustCompile(`^([A-Za-z_][A-Za-z0-9_-]*)\s*[:=]\s*(.*)$`)
-	sizes  = []string{"small", "regular", "grid"}
-	named  = map[string]string{"url": "url", "link": "url", "href": "url", "title": "title", "name": "title", "desc": "desc", "description": "desc", "summary": "desc", "image": "image", "img": "image", "cover": "image", "icon": "icon", "favicon": "icon", "logo": "icon", "size": "size", "theme": "size", "target": "target"}
+	tags  = regexp.MustCompile(`<[^>]*>`)
+	param = regexp.MustCompile(`^([A-Za-z_][A-Za-z0-9_-]*)\s*[:=]\s*(.*)$`)
+	sizes = []string{"small", "regular", "grid"}
+	named = map[string]string{"url": "url", "link": "url", "href": "url", "title": "title", "name": "title", "desc": "desc", "description": "desc", "summary": "desc", "image": "image", "img": "image", "cover": "image", "icon": "icon", "favicon": "icon", "logo": "icon", "size": "size", "theme": "size", "target": "target"}
 )
 
 // blockText reads what a card's code block says, as the one who wrote it

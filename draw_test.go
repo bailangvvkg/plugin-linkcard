@@ -153,3 +153,48 @@ func TestDrawHaloCustomFields(t *testing.T) {
 		}
 	}
 }
+
+func TestBareCards(t *testing.T) {
+	page := `<html><body><nav><a href="https://nav.example.com">https://nav.example.com</a></nav>` +
+		`<article><p>看看 <a href="https://example.com/a">https://example.com/a</a> 这里</p>` +
+		`<p><a href="https://example.com/b">example.com/b</a></p>` +
+		`<p><a href="https://example.com/c" target="_top">https://example.com/c/</a></p>` +
+		`<p><a href="https://example.com/d">点这里</a></p>` +
+		`<p><a href="/about/">关于</a></p></article>` +
+		`<footer><a href="https://foot.example.com">https://foot.example.com</a></footer></body></html>`
+	got := bareCards(page, "regular", "_blank")
+
+	if !strings.Contains(got, `<article><p>看看 <a class="kite-card" data-size="regular" href="https://example.com/a"`) {
+		t.Errorf("a bare link in the writing did not become a card:\n%s", got)
+	}
+	for _, want := range []string{`href="https://example.com/b"`, `href="https://example.com/c"`} {
+		if !strings.Contains(got, want) {
+			t.Errorf("a bare link that said its address another way was left:\n%s", got)
+		}
+	}
+	for _, keep := range []string{`>点这里</a>`, `href="/about/"`, `<a href="https://nav.example.com">`, `<a href="https://foot.example.com">`} {
+		if !strings.Contains(got, keep) {
+			t.Errorf("a link that is no card was changed: %q\n%s", keep, got)
+		}
+	}
+	if strings.Count(got, "kite-card") != 3 {
+		t.Errorf("want 3 cards, got %d:\n%s", strings.Count(got, "kite-card"), got)
+	}
+}
+
+func TestBareCardsNeedsFetch(t *testing.T) {
+	page := `<article><a href="https://example.com/x">https://example.com/x</a></article>`
+	card, ok := drawCard(map[string]string{"url": "https://example.com/x"}, "small", "_blank")
+	if !ok {
+		t.Fatal("the card was not drawn")
+	}
+	if !strings.Contains(card, `data-need="icon title"`) {
+		t.Errorf("a small card with nothing written asks for its icon:\n%s", card)
+	}
+	if strings.Contains(card, "kc-desc") {
+		t.Errorf("a small card has no description:\n%s", card)
+	}
+	if got := bareCards(page, "small", "_self"); !strings.Contains(got, `target="_self"`) {
+		t.Errorf("the setting did not reach the bare card:\n%s", got)
+	}
+}

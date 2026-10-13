@@ -72,6 +72,11 @@ settings:
     help: Keep fetched metadata in the reader's browser, so a card is fetched once.
     default: true
     showIf: {fetch: true}
+  - key: links
+    type: boolean
+    label: Bare links as cards
+    help: Links in a post whose text is just the address, as autolinks are, stand for cards too. Only the writing itself is touched, inside an article tag, never the menus and footers around it.
+    default: false
   - key: icons
     type: select
     label: Favicon service

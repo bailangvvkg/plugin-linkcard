@@ -15,6 +15,7 @@ func transformHTML() int32 {
 		Settings struct {
 			DefaultSize string `json:"default_size"`
 			Target      string `json:"target"`
+			Links       bool   `json:"links"`
 		} `json:"settings"`
 		HTML string `json:"html"`
 	}
@@ -44,6 +45,9 @@ func transformHTML() int32 {
 		}
 		return card
 	})
+	if in.Settings.Links {
+		out = bareCards(out, size, target)
+	}
 	if out == in.HTML {
 		return 0
 	}
@@ -53,4 +57,3 @@ func transformHTML() int32 {
 	}
 	return 0
 }
-
