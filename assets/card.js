@@ -41,18 +41,21 @@
       return [];
     }
     // The usual places a favicon sits, straight from the site the card
-    // points at, through no one else: the last leg of every chain, for a
-    // service that does not answer.
+    // points at, through no one else.
     var direct = [origin + "/favicon.ico", origin + "/apple-touch-icon.png", origin + "/favicon.png"];
+    // Icon Horse reads the site itself and hands its favicon over with a
+    // CORS header, free of key and quota, and reaches readers in China;
+    // it finds favicons the paths above cannot, as one on a made-up path.
+    var horse = "https://icon.horse/icon/" + host;
     switch (S.icons) {
       case "none":
         return [];
       case "google":
-        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64"].concat(direct);
+        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64", horse].concat(direct);
       case "direct":
-        return direct;
+        return direct.concat([horse]);
       default:
-        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico"].concat(direct);
+        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico", horse].concat(direct);
     }
   }
 
@@ -155,12 +158,23 @@
     }
   }
 
-  // The addresses to ask, best first: the one of the settings, then the
-  // services of the world that answer without a key — Noembed, which knows
-  // the sites that speak oEmbed and never runs out, and Microlink, which
-  // knows every site but counts a reader's questions per day.
+  // The addresses to ask, best first: the site itself when it is one of
+  // those whose own API answers any browser, then the one of the settings,
+  // then the services of the world that answer without a key — Noembed,
+  // which knows the sites that speak oEmbed and never runs out, and
+  // Microlink, which knows every site but counts a reader's questions a
+  // day.
   function endpointsOf(href) {
     var enc = encodeURIComponent(href), ends = [];
+
+    // A repository of GitHub is asked of GitHub: its API answers any
+    // browser, without a key, with the name, the description and the
+    // owner's picture.
+    var repo = href.match(/^https?:\/\/github\.com\/([A-Za-z0-9_.-]+)\/[A-Za-z0-9_.-]+/);
+    if (repo) {
+      ends.push("https://api.github.com/repos/" + repo[1] + "/" + href.split("/")[4].split(/[?#]/)[0]);
+    }
+
     if (S.api === "custom" && S.api_url) {
       ends.push(S.api_url.replace("{url}", enc));
     }
@@ -183,10 +197,10 @@
       return "";
     }
     return {
-      title: d.title || "",
+      title: d.title || d.full_name || "",
       desc: d.description || d.desc || "",
       image: addr(d.image) || addr(d.screenshot) || addr(d.thumbnail_url) || addr(d.thumbnail),
-      icon: addr(d.logo) || addr(d.icon || d.publisher)
+      icon: addr(d.logo) || addr(d.icon || d.publisher) || addr(d.owner && d.owner.avatar_url)
     };
   }
 
@@ -238,7 +252,12 @@
         var meta = pick(reply);
         if (meta.title || meta.desc || meta.image || meta.icon) {
           writeCache(href, meta);
-          apply(card, meta);
+          // A card odd enough to trip the filling of a field — an element
+          // the theme removed — costs the reader no questions to another
+          // service: what was brought is kept and the next card is taken.
+          try {
+            apply(card, meta);
+          } catch (e) {}
           fillNext();
           return;
         }

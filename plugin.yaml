@@ -14,7 +14,7 @@ license: MIT
 homepage: https://github.com/bailangvvkg/plugin-linkcard
 
 # The plugin's scripts load favicons and link metadata from these sites.
-hosts: [api.microlink.io, noembed.com, icons.duckduckgo.com, www.google.com]
+hosts: [api.microlink.io, noembed.com, api.github.com, icon.horse, icons.duckduckgo.com, www.google.com]
 
 # plugin.wasm draws the cards when a page is built; card.js fills in what
 # the cards are missing, fetching only what the settings allow.

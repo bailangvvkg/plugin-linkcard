@@ -12,9 +12,11 @@ WebAssembly 模块画成 HTML，读者浏览器里再补上缺的图标和文字
   或不用
 - **自动抓取**（可在设置里关闭）：没写的标题、描述、配图在浏览器端向
   Microlink 或自定义接口询问，结果缓存在读者浏览器里，一张卡片只问一次。浏览器按
-  三级链路问：自定义接口 → Noembed（免 key 无配额，覆盖 YouTube、Twitter 等
-  oEmbed 站点）→ Microlink（任意网站，免费额度按读者 IP 每天约 50 次），一个
-  服务没答上就问下一个
+  链路换着问：GitHub 仓库链接直接问 GitHub 官方 API（免 key，零第三方）→ 自定义
+  接口 → Noembed（免 key 无配额，覆盖 YouTube、Twitter 等 oEmbed 站点）→
+  Microlink（任意网站，免费额度按读者 IP 每天约 50 次），一个没答上就问下一个。
+  图标除目标站直连路径外，还有 Icon Horse 免费服务兑底——大陆可达、免 key，
+  能找到藏在自定义路径里的图标
 - 插件卸载后，`card` 代码块退回为普通代码块，**不会让构建失败**，也不会泄露内容
 - **裸链接也能成卡**（默认开启，设置里可关）：正文里链接文字就是网址本身的
   （如直接粘贴的 `https://example.com`）也渲染成卡片；只作用于正文
@@ -101,7 +103,8 @@ https://www.kite.plus
 （DuckDuckGo / Google / 不使用）。
 
 Microlink 免费额度按来源 IP 计，每天约 50 次；开启缓存后读者每张卡只问一次。
-Noembed 不限次数，但只认识提供 oEmbed 的站点（视频站、社交站等）。
+Noembed 不限次数，但只认识提供 oEmbed 的站点（视频站、社交站等）；GitHub 仓库
+卡片不消耗任何第三方配额。
 也可以自建或换用任何返回 `title` / `description` / `image` / `logo` 字段 JSON
 的接口，在设置里选“自定义接口”并填地址。
 
