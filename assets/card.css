@@ -61,6 +61,25 @@
   margin-top: 1px;
 }
 
+/* The letter that stands in when no icon is anywhere to be had. */
+.kc-icon-letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--kc-accent, #5b8def);
+  background: color-mix(in srgb, var(--kc-accent, #5b8def) 14%, transparent);
+}
+
+.kite-card[data-size="grid"] .kc-icon-letter {
+  font-size: 17px;
+}
+
+.kite-card[data-size="small"] .kc-icon-letter {
+  font-size: 11px;
+}
+
 .kc-text {
   display: flex;
   flex-direction: column;

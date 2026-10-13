@@ -1,7 +1,8 @@
-// Linkcard: fills in what a card's block left out. Icons come from a favicon
-// service; titles, descriptions and pictures can be fetched from a link
-// detail service, if the site's settings allow it. Everything a card already
-// says, nothing touches.
+// Linkcard: fills in what a card's block left out. Icons come from a
+// favicon service, or straight from the linked site, or the letter of its
+// name; titles, descriptions and pictures can be fetched from a link
+// detail service, if the site's settings allow it. Everything a card
+// already says, nothing touches.
 (function () {
   "use strict";
 
@@ -39,35 +40,59 @@
     } catch (e) {
       return [];
     }
+    // The usual places a favicon sits, straight from the site the card
+    // points at, through no one else: the last leg of every chain, for a
+    // service that does not answer.
+    var direct = [origin + "/favicon.ico", origin + "/apple-touch-icon.png", origin + "/favicon.png"];
     switch (S.icons) {
       case "none":
         return [];
       case "google":
-        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64"];
-      // Straight from the site the card points at, through no one else:
-      // the usual places a favicon sits are tried one after another.
+        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64"].concat(direct);
       case "direct":
-        return [origin + "/favicon.ico", origin + "/apple-touch-icon.png", origin + "/favicon.png"];
+        return direct;
       default:
-        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico"];
+        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico"].concat(direct);
     }
   }
 
   function putIcon(card, src, more) {
     var body = card.querySelector(".kc-body");
-    if (!body || body.querySelector(".kc-icon")) return;
+    if (!body) return;
+    var old = body.querySelector(".kc-icon");
+    if (old && old.tagName === "IMG") return; // a real icon is in already
+    if (old) old.remove(); // a letter was standing in for it
     var img = document.createElement("img");
     img.className = "kc-icon";
     img.alt = "";
     img.loading = "lazy";
-    if (more && more.length) {
-      img.onerror = function () {
-        img.remove();
+    // Only a picture that truly came counts: one that fails to load leaves
+    // the icon wanted, so a service's reply can still fill it.
+    img.onload = function () {
+      done(card, "icon");
+    };
+    img.onerror = function () {
+      img.remove();
+      if (more && more.length) {
         putIcon(card, more[0], more.slice(1));
-      };
-    }
+      } else {
+        letterIcon(card);
+      }
+    };
     img.src = src;
     body.insertBefore(img, body.firstChild);
+  }
+
+  // What every card can fall back to when nothing anywhere says what the
+  // site's icon is: the first letter of its name.
+  function letterIcon(card) {
+    var body = card.querySelector(".kc-body");
+    if (!body || body.querySelector(".kc-icon")) return;
+    var host = hostOf(card);
+    var span = document.createElement("span");
+    span.className = "kc-icon kc-icon-letter";
+    span.textContent = (host || "?").charAt(0).toUpperCase();
+    body.insertBefore(span, body.firstChild);
     done(card, "icon");
   }
 
@@ -173,7 +198,7 @@
   // limit of a free one lasts: the reader who opens a page pays for it once.
   var waiting = cards.filter(function (card) {
     if (S.fetch === false) return false;
-    return needs(card, "title") || needs(card, "desc") || needs(card, "image");
+    return needs(card, "title") || needs(card, "desc") || needs(card, "image") || needs(card, "icon");
   });
 
   function fillNext() {
@@ -204,4 +229,13 @@
   }
 
   fillNext();
+
+  // Whatever is still without an icon once every attempt had its turn —
+  // a service that does not answer, a site with no favicon anywhere —
+  // gets the letter of its name, so no card looks unfinished.
+  setTimeout(function () {
+    cards.forEach(function (card) {
+      if (needs(card, "icon")) letterIcon(card);
+    });
+  }, 1200);
 })();
