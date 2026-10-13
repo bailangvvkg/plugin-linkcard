@@ -16,7 +16,7 @@ plugin:
       help: 缺失的标题和描述从哪里来。Microlink 是免费的公共 API，有每日限额。
     api_url:
       label: 自定义接口
-      help: 抓取来源选“自定义接口”时读取。地址里用 {url} 表示链接地址，如 https://api.example.com/link?url={url}；接口返回 JSON，含 title、description、image、logo。
+      help: 抓取来源选“自定义接口”时读取。地址里用 {url} 表示链接地址，如 https://api.example.com/link?url={url}；接口返回 JSON，含 title、description、image、logo。接口没有回答时，会自动改问 Microlink。
       placeholder: https://api.example.com/link?url={url}
     cache:
       label: 缓存抓取结果

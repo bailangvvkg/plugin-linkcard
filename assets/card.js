@@ -162,6 +162,18 @@
     return "https://api.microlink.io/?url=" + encodeURIComponent(href);
   }
 
+  // The addresses to ask, best first: the one of the settings, then, so
+  // that a service down for a moment leaves no card empty, Microlink
+  // unless it was the one of the settings already.
+  function endpointsOf(href) {
+    var first = endpointOf(href);
+    var ends = [first];
+    if (first.indexOf("microlink.io") < 0) {
+      ends.push("https://api.microlink.io/?url=" + encodeURIComponent(href));
+    }
+    return ends;
+  }
+
   // A reply may be Microlink's shape, {status, data: {...}}, or plainly the
   // data itself, as a custom endpoint answers; pictures may be strings or
   // {url: ...} objects.
@@ -212,7 +224,16 @@
       fillNext();
       return;
     }
-    fetch(endpointOf(href))
+    ask(card, href, endpointsOf(href), 0);
+  }
+
+  // Asks each address in turn until one brings something of the card.
+  function ask(card, href, ends, i) {
+    if (i >= ends.length) {
+      fillNext();
+      return;
+    }
+    fetch(ends[i])
       .then(function (r) {
         return r.ok ? r.json() : null;
       })
@@ -221,12 +242,15 @@
         if (meta.title || meta.desc || meta.image || meta.icon) {
           writeCache(href, meta);
           apply(card, meta);
+          fillNext();
+          return;
         }
+        ask(card, href, ends, i + 1);
       })
       .catch(function () {
-        /* the card keeps what it was built with */
-      })
-      .then(fillNext);
+        /* this address said nothing: the next one is asked */
+        ask(card, href, ends, i + 1);
+      });
   }
 
   fillNext();
