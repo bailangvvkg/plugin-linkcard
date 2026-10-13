@@ -155,22 +155,19 @@
     }
   }
 
-  function endpointOf(href) {
-    if (S.api === "custom" && S.api_url) {
-      return S.api_url.replace("{url}", encodeURIComponent(href));
-    }
-    return "https://api.microlink.io/?url=" + encodeURIComponent(href);
-  }
-
-  // The addresses to ask, best first: the one of the settings, then, so
-  // that a service down for a moment leaves no card empty, Microlink
-  // unless it was the one of the settings already.
+  // The addresses to ask, best first: the one of the settings, then the
+  // services of the world that answer without a key — Noembed, which knows
+  // the sites that speak oEmbed and never runs out, and Microlink, which
+  // knows every site but counts a reader's questions per day.
   function endpointsOf(href) {
-    var first = endpointOf(href);
-    var ends = [first];
-    if (first.indexOf("microlink.io") < 0) {
-      ends.push("https://api.microlink.io/?url=" + encodeURIComponent(href));
+    var enc = encodeURIComponent(href), ends = [];
+    if (S.api === "custom" && S.api_url) {
+      ends.push(S.api_url.replace("{url}", enc));
     }
+    var noembed = "https://noembed.com/embed?url=" + enc;
+    if (ends.indexOf(noembed) < 0) ends.push(noembed);
+    var microlink = "https://api.microlink.io/?url=" + enc;
+    if (ends.indexOf(microlink) < 0) ends.push(microlink);
     return ends;
   }
 
@@ -188,7 +185,7 @@
     return {
       title: d.title || "",
       desc: d.description || d.desc || "",
-      image: addr(d.image) || addr(d.screenshot),
+      image: addr(d.image) || addr(d.screenshot) || addr(d.thumbnail_url) || addr(d.thumbnail),
       icon: addr(d.logo) || addr(d.icon || d.publisher)
     };
   }
