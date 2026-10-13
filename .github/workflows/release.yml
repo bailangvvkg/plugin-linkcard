@@ -28,7 +28,11 @@ jobs:
           sed -i "s/^version: .*/version: $version/" plugin.yaml
 
       - name: Pack the plugin
-        run: make zip
+        run: |
+          make zip
+          # A second copy under a name that never changes, so a site can
+          # always take the latest with one address.
+          cp "$(ls dist/*.zip | head -1)" "dist/$(basename "$(ls dist/*.zip | head -1)" | sed 's/-[0-9]\{8\}-[0-9]\{6\}\.zip$/-latest.zip/')"
 
       # Makes the tag itself, named after the clock, with the zip on it.
       - name: Publish the release
