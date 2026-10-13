@@ -72,9 +72,29 @@ var attrNames = map[string]string{"href": "url", "target": "target", "theme": "s
 // from what a card's block says.
 var (
 	tags  = regexp.MustCompile(`<[^>]*>`)
-	param = regexp.MustCompile(`^([A-Za-z_][A-Za-z0-9_-]*)\s*[:=]\s*(.*)$`)
+	// The key is whatever stands before a colon or an equals sign, so that
+	// names in any language read the same; an address that carries one of its
+	// own falls through to the address branch below, as it is not a known key.
+	param = regexp.MustCompile(`^([^\s:=]+)\s*[:=]\s*(.*)$`)
 	sizes = []string{"small", "regular", "grid"}
-	named = map[string]string{"url": "url", "link": "url", "href": "url", "title": "title", "name": "title", "desc": "desc", "description": "desc", "summary": "desc", "image": "image", "img": "image", "cover": "image", "icon": "icon", "favicon": "icon", "logo": "icon", "size": "size", "theme": "size", "target": "target"}
+	named = map[string]string{
+		// English names, with a few of their friends.
+		"url": "url", "link": "url", "href": "url", "address": "url",
+		"title": "title", "name": "title",
+		"desc": "desc", "description": "desc", "summary": "desc",
+		"image": "image", "img": "image", "cover": "image",
+		"icon": "icon", "favicon": "icon", "logo": "icon",
+		"size": "size", "theme": "size",
+		"target": "target",
+		// And the same in Chinese, for the card's writer is Chinese.
+		"链接": "url", "网址": "url", "地址": "url", "链接地址": "url",
+		"标题": "title", "名称": "title",
+		"描述": "desc", "简介": "desc", "摘要": "desc", "说明": "desc",
+		"图片": "image", "封面": "image", "配图": "image",
+		"图标": "icon", "站点图标": "icon",
+		"尺寸": "size", "大小": "size",
+		"新窗口": "target", "打开方式": "target",
+	}
 )
 
 // blockText reads what a card's code block says, as the one who wrote it
@@ -189,9 +209,9 @@ func drawCard(p map[string]string, defSize, defTarget string) (string, bool) {
 	}
 	target := defTarget
 	switch p["target"] {
-	case "_self":
+	case "_self", "当前窗口", "本窗口", "当前页":
 		target = "_self"
-	case "_blank":
+	case "_blank", "新窗口", "新标签页":
 		target = "_blank"
 	}
 

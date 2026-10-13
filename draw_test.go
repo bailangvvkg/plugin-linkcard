@@ -198,3 +198,28 @@ func TestBareCardsNeedsFetch(t *testing.T) {
 		t.Errorf("the setting did not reach the bare card:\n%s", got)
 	}
 }
+
+// Chinese names read the same as English ones, and a Chinese value picks
+// where the card opens.
+func TestParamsChineseNames(t *testing.T) {
+	c, ok := drawCard(params(
+		"链接: https://nginx.zipimg.cn\n"+
+			"标题: 我的下载站\n"+
+			"描述: 放安装包的地方\n"+
+			"图标: https://nginx.zipimg.cn/logo.png\n"+
+			"尺寸: small"), "grid", "_blank")
+	if !ok || c != `<a class="kite-card" data-size="small" href="https://nginx.zipimg.cn" target="_blank" rel="noopener"><span class="kc-body"><img class="kc-icon" src="https://nginx.zipimg.cn/logo.png" alt="" width="32" height="32" loading="lazy"><span class="kc-text"><strong class="kc-title">我的下载站</strong><span class="kc-desc">放安装包的地方</span><span class="kc-host">nginx.zipimg.cn</span></span></span></a>` {
+		t.Fatalf("chinese keys: %q %v", c, ok)
+	}
+	for _, each := range []struct{ val, want string }{
+		{"新窗口", "_blank"}, {"当前窗口", "_self"}, {"新标签页", "_blank"}, {"_self", "_self"},
+	} {
+		if c, ok := drawCard(map[string]string{"url": "https://x.cn", "target": each.val}, "grid", "_self"); !ok || !strings.Contains(c, `target="`+each.want+`"`) {
+			t.Fatalf("target %q gave %q", each.val, c)
+		}
+	}
+	// An address with a colon of its own still reads as an address.
+	if p := params("https://caddy2.dengxiaolong.com/docs/"); p["url"] != "https://caddy2.dengxiaolong.com/docs/" {
+		t.Fatalf("bare address misread: %v", p)
+	}
+}
