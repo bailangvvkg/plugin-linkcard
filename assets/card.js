@@ -45,17 +45,18 @@
     var direct = [origin + "/favicon.ico", origin + "/apple-touch-icon.png", origin + "/favicon.png"];
     // Icon Horse reads the site itself and hands its favicon over with a
     // CORS header, free of key and quota, and reaches readers in China;
-    // it finds favicons the paths above cannot, as one on a made-up path.
-    var horse = "https://icon.horse/icon/" + host;
+    // it finds favicons the paths above cannot, as one on a made-up path
+    // — unless the settings keep it out.
+    var horse = S.horse === false ? [] : ["https://icon.horse/icon/" + host];
     switch (S.icons) {
       case "none":
         return [];
       case "google":
-        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64", horse].concat(direct);
+        return ["https://www.google.com/s2/favicons?domain=" + encodeURIComponent(host) + "&sz=64"].concat(horse, direct);
       case "direct":
-        return direct.concat([horse]);
+        return direct.concat(horse);
       default:
-        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico", horse].concat(direct);
+        return ["https://icons.duckduckgo.com/ip3/" + host + ".ico"].concat(horse, direct);
     }
   }
 
@@ -169,19 +170,25 @@
 
     // A repository of GitHub is asked of GitHub: its API answers any
     // browser, without a key, with the name, the description and the
-    // owner's picture.
-    var repo = href.match(/^https?:\/\/github\.com\/([A-Za-z0-9_.-]+)\/[A-Za-z0-9_.-]+/);
-    if (repo) {
-      ends.push("https://api.github.com/repos/" + repo[1] + "/" + href.split("/")[4].split(/[?#]/)[0]);
+    // owner's picture — unless the settings turn the asking of GitHub off.
+    if (S.github !== false) {
+      var repo = href.match(/^https?:\/\/github\.com\/([A-Za-z0-9_.-]+)\/[A-Za-z0-9_.-]+/);
+      if (repo) {
+        ends.push("https://api.github.com/repos/" + repo[1] + "/" + href.split("/")[4].split(/[?#]/)[0]);
+      }
     }
 
     if (S.api === "custom" && S.api_url) {
       ends.push(S.api_url.replace("{url}", enc));
     }
-    var noembed = "https://noembed.com/embed?url=" + enc;
-    if (ends.indexOf(noembed) < 0) ends.push(noembed);
-    var microlink = "https://api.microlink.io/?url=" + enc;
-    if (ends.indexOf(microlink) < 0) ends.push(microlink);
+    if (S.noembed !== false) {
+      var noembed = "https://noembed.com/embed?url=" + enc;
+      if (ends.indexOf(noembed) < 0) ends.push(noembed);
+    }
+    if (S.microlink !== false) {
+      var microlink = "https://api.microlink.io/?url=" + enc;
+      if (ends.indexOf(microlink) < 0) ends.push(microlink);
+    }
     return ends;
   }
 

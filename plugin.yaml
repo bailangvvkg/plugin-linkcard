@@ -63,9 +63,27 @@ settings:
   - key: api_url
     type: text
     label: Custom endpoint
-    help: Read when Fetch from is Custom endpoint. Put {url} where the address goes, as https://api.example.com/link?url={url}; the reply is JSON with title, description, image and logo. When it answers nothing, Microlink is asked instead.
+    help: Read when Fetch from is Custom endpoint. Put {url} where the address goes, as https://api.example.com/link?url={url}; the reply is JSON with title, description, image and logo. When it answers nothing, the services below are asked instead.
     placeholder: https://api.example.com/link?url={url}
     showIf: {fetch: true, api: custom}
+  - key: github
+    type: boolean
+    label: Ask GitHub itself
+    help: A card of a GitHub repository is asked of GitHub's own API, which answers any browser without a key, with the name, the description and the owner's picture, through no third party.
+    default: true
+    showIf: {fetch: true}
+  - key: noembed
+    type: boolean
+    label: Ask Noembed for video and social sites
+    help: Noembed answers for the sites that speak oEmbed — YouTube, Twitter and the like — without a key and without a limit, so these cards never spend another service's daily share.
+    default: true
+    showIf: {fetch: true}
+  - key: microlink
+    type: boolean
+    label: Ask Microlink as the last resort
+    help: Microlink answers for any site, free for about 50 questions a day from a reader's address; uncheck to keep a reader away from it even as a fallback.
+    default: true
+    showIf: {fetch: true}
   - key: cache
     type: boolean
     label: Cache what is fetched
@@ -87,3 +105,8 @@ settings:
       - {value: google, label: Google}
       - {value: direct, label: Direct from the site}
       - {value: none, label: None}
+  - key: horse
+    type: boolean
+    label: Icon Horse as the favicon fallback
+    help: Icon Horse reads the linked site and hands its favicon over, free of key and quota, and finds favicons sitting on made-up paths; uncheck to keep every icon coming from the service chosen above only.
+    default: true

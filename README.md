@@ -102,9 +102,8 @@ https://www.kite.plus
 抓取来源（Microlink 或自定义接口 `{url}` 占位符）、是否缓存抓取结果、图标服务
 （DuckDuckGo / Google / 不使用）。
 
-Microlink 免费额度按来源 IP 计，每天约 50 次；开启缓存后读者每张卡只问一次。
-Noembed 不限次数，但只认识提供 oEmbed 的站点（视频站、社交站等）；GitHub 仓库
-卡片不消耗任何第三方配额。
+后台可逐层开关：直问 GitHub、问 Noembed、Microlink 兑底、Icon Horse 图标兑底，
+每一层都可单独关闭；全部关闭则卡片只用文内写好的字段。
 也可以自建或换用任何返回 `title` / `description` / `image` / `logo` 字段 JSON
 的接口，在设置里选“自定义接口”并填地址。
 

@@ -13,11 +13,20 @@ plugin:
       help: 在读者的浏览器里向链接详情服务询问卡片没有写的标题和描述。
     api:
       label: 抓取来源
-      help: 缺失的标题和描述从哪里来。Microlink 是免费的公共 API，有每日限额；自定义接口失败时自动改问 Noembed、再问 Microlink；GitHub 链接则直接问 GitHub 官方 API。
+      help: 缺失的标题和描述首先问谁。Microlink 是免费的公共 API，有每日限额；自定义接口（如自己的服务）优先使用。之后依次按下面开关问 GitHub、Noembed、Microlink。
     api_url:
       label: 自定义接口
-      help: 抓取来源选“自定义接口”时读取。地址里用 {url} 表示链接地址，如 https://api.example.com/link?url={url}；接口返回 JSON，含 title、description、image、logo。接口没有回答时，会自动改问 Microlink。
+      help: 抓取来源选“自定义接口”时读取。地址里用 {url} 表示链接地址，如 https://api.example.com/link?url={url}；接口返回 JSON，含 title、description、image、logo。接口没有回答时，会自动改问下面开启的其他服务。
       placeholder: https://api.example.com/link?url={url}
+    github:
+      label: 直问 GitHub
+      help: GitHub 仓库链接直接问 GitHub 官方 API：仓库名、描述、作者头像，免 key 零第三方，不消耗任何配额。
+    noembed:
+      label: 问 Noembed（视频/社交站）
+      help: Noembed 免 key、不限次数，回答 YouTube、Twitter 等支持 oEmbed 的站点，这类卡片不消耗其他服务的每日额度。
+    microlink:
+      label: Microlink 兑底
+      help: Microlink 能抓任意网站，按读者 IP 每天免费约 50 次。取消勾选则连兑底也不问它。
     cache:
       label: 缓存抓取结果
       help: 把抓取到的元数据存在读者的浏览器里，一张卡片只抓取一次。
@@ -27,6 +36,9 @@ plugin:
     icons:
       label: 图标服务
       help: 卡片没有写 icon 时，网站图标从哪里来。选“直连目标站”时直接向链接的网站要它的 favicon，不经任何第三方；对方网站图标不在常见路径时就不显示。
+    horse:
+      label: Icon Horse 图标兑底
+      help: Icon Horse 免 key 不限次，能找到藏在自定义路径里的网站图标。取消勾选则图标只来自上面选的服务。
     default_size.options:
       small: 小
       regular: 常规
