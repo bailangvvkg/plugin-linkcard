@@ -76,7 +76,7 @@ settings:
     type: boolean
     label: Bare links as cards
     help: Links in a post whose text is just the address, as autolinks are, stand for cards too. Only the writing itself is touched, inside an article tag, never the menus and footers around it.
-    default: false
+    default: true
   - key: icons
     type: select
     label: Favicon service
